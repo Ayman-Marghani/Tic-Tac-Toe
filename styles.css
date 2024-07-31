@@ -30,4 +30,10 @@ p, h1, h2, h3, h4, h5, h6 {
 .game-board {
   display: grid;
   grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+  gap: 12px;
+}
+
+.board-cell {
+  min-width: 50px;
+  min-height: 50px;
 }

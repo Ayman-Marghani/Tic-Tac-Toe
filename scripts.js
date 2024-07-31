@@ -16,52 +16,58 @@ function GameBoard() {
   let rows = 3;
   let cols = 3;
   let board = [];
- 
-  for (let i = 0; i < rows; i++) {
-    board[i] = [];
-    for (let j = 0; j < cols; j++) {
-      board[i].push(".");
-    }
-  }
-
+  
   const getBoard = () => board;
 
-  const putMarker = (player, row, col) => {
-    if (board[row][col] === ".") {
-      board[row][col] = player.marker;
-    }
-  };
-
-  const printBoard = () => {
+  const createNewBoard = () => {
+    board = [];
     for (let i = 0; i < rows; i++) {
-      let printedRow = "";
+      board[i] = [];
       for (let j = 0; j < cols; j++) {
-        printedRow += " " + board[i][j];
+        board[i].push(".");
       }
-      console.log(printedRow);
     }
   };
 
-  return {getBoard, putMarker, printBoard};
+  const putMarker = (player, row, col) => {
+    board[row][col] = player.marker;
+  };
+  
+  // Create the initial board
+  createNewBoard();
+
+  return {getBoard, putMarker};
 }
 
 function GameController(
   playerOneName = "Player One", 
   playerTwoName = "Player Two"
 ) {
-  let turn = 0;
-  const board = GameBoard();
-
   const players = [
     new Player(playerOneName, "X"),
     new Player(playerTwoName, "O")
   ];
 
   let currentPlayer = players[0];
+  let turn = 0;
+  const board = GameBoard();
+
+
+  const getCurrentPlayer = () => currentPlayer;
 
   const switchTurn = () => {
     turn++;
     currentPlayer = players[turn % 2];
+  };
+
+  // we can get rid of this function
+  const getPlayerName = (gameStatus) => {
+    if (gameStatus === 1) {
+      return players[0].name;
+    }
+    else if (gameStatus === 2) {
+      return players[1].name;
+    }
   };
 
   const checkStatus = () => {
@@ -99,61 +105,86 @@ function GameController(
       }
     }
     // Check Draw
-    if (turn >= 8) {
+    if (turn >= 9) {
       return 3;
     }
-    
+    // Game still running
     return 0;
   }
-  /*
-  1 1 1 
-  1 1 1
-  7 8 9
-  */
-
-  const printNewRound = () => {
-    board.printBoard();
-    console.log(`${currentPlayer.name}'s turn!`);
-  };
 
   const playRound = (row, col) => {
-    board.putMarker(currentPlayer, row, col);
-    console.log(`${currentPlayer.name} is playing`);
-
-    switchTurn();
-    printNewRound();
+    if (board.getBoard()[row][col] === ".") {
+      board.putMarker(currentPlayer, row, col);
+      switchTurn();
+    }
   };
 
-  printNewRound();
-
-  return {playRound, checkStatus};
+  return {playRound, checkStatus, getCurrentPlayer, getPlayerName, getBoard: board.getBoard};
 }
 
 function DisplayController() {
-  const game = GameController();
   let gameStatus = 0;
+  const game = GameController();
+
+  const gameBoardDiv = document.querySelector(".game-board");
+  const turnDiv = document.querySelector(".turn");
+  const resultDiv = document.querySelector(".result");
+
+  const updateScreen = () => {
+    // clear the board
+    gameBoardDiv.textContent = "";
+
+    // get the newest version of the board and player turn
+    const board = game.getBoard();
+    const currentPlayer = game.getCurrentPlayer();
+    // Render current player's turn
+    turnDiv.textContent = `${currentPlayer.name}'s turn!`;
+
+    // Render board cells
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        const boardCell = document.createElement("button");
+        boardCell.classList.add("board-cell");
+        boardCell.setAttribute("row", i);
+        boardCell.setAttribute("col", j);
+        boardCell.textContent = board[i][j] !== "." ? board[i][j] : "";
+        gameBoardDiv.appendChild(boardCell);
+      }
+    }
+  };
 
   const endScreen = () => {
-    // Player one won
-    console.log("Result: Player one won");
-    // Player two won
-    console.log("Result: Player two won");
-    // Draw
-    console.log("Result: Draw");
-
+    // Change Result Div
+    if (gameStatus === 3) {
+      resultDiv.textContent = "Draw!";
+    }
+    else {
+      resultDiv.textContent = `${game.getPlayerName(gameStatus)} Won!`;
+    }
+    // remove turn div content
+    turnDiv.textContent = "";
   };
  
-  const updateDisplay = () => {
-    while(gameStatus === 0) {
-      let row = parseInt(prompt("Enter row: "));
-      let col = parseInt(prompt("Enter col: "));
-      game.playRound(row, col);
-      gameStatus = game.checkStatus();
-    } 
-    endScreen();
+  const clickBoardHandler = (e) => {
+    const row = e.target.getAttribute("row");
+    const col = e.target.getAttribute("col");
+    // Make sure a cell is clicked not the gaps in between
+    if (!row || !col) return;
+    // put X or O on the clicked cell
+    game.playRound(row, col);
+    // update the screen with the last move
+    updateScreen();
+    gameStatus = game.checkStatus();
+    // If the game ended (win, lose or draw) display the result and remove click handler
+    if (gameStatus !== 0) {
+      endScreen();
+      gameBoardDiv.removeEventListener("click", clickBoardHandler);
+    }
   };
+  gameBoardDiv.addEventListener("click", clickBoardHandler);
 
-  updateDisplay();
+  // Initial render
+  updateScreen();
 }
 
 DisplayController();
