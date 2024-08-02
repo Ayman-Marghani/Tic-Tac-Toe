@@ -61,11 +61,11 @@ function GameController(
   };
 
   // we can get rid of this function
-  const getPlayerName = (gameStatus) => {
-    if (gameStatus === 1) {
+  const getPlayerNameByMarker = (marker) => {
+    if (marker === "X") {
       return players[0].name;
     }
-    else if (gameStatus === 2) {
+    else if (marker === "O") {
       return players[1].name;
     }
   };
@@ -119,7 +119,7 @@ function GameController(
     }
   };
 
-  return {playRound, checkStatus, getCurrentPlayer, getPlayerName, getBoard: board.getBoard};
+  return {playRound, checkStatus, getCurrentPlayer, getPlayerNameByMarker, getBoard: board.getBoard};
 }
 
 function DisplayController() {
@@ -127,8 +127,10 @@ function DisplayController() {
   const game = GameController();
 
   const gameBoardDiv = document.querySelector(".game-board");
-  const turnDiv = document.querySelector(".turn");
-  const resultDiv = document.querySelector(".result");
+  const textDisplayDiv = document.querySelector(".text-display");
+  const blueColor = "#0284c7";
+  const redColor = "#e63946";
+  const yellowColor = "#fbbf24";
 
   const updateScreen = () => {
     // clear the board
@@ -138,7 +140,7 @@ function DisplayController() {
     const board = game.getBoard();
     const currentPlayer = game.getCurrentPlayer();
     // Render current player's turn
-    turnDiv.textContent = `${currentPlayer.name}'s turn!`;
+    textDisplayDiv.textContent = `${currentPlayer.name}'s turn!`;
 
     // Render board cells
     for (let i = 0; i < 3; i++) {
@@ -148,6 +150,12 @@ function DisplayController() {
         boardCell.setAttribute("row", i);
         boardCell.setAttribute("col", j);
         boardCell.textContent = board[i][j] !== "." ? board[i][j] : "";
+        if (boardCell.textContent === "X") {
+          boardCell.style.color = blueColor;
+        }
+        else if (boardCell.textContent === "O") {
+          boardCell.style.color = redColor;
+        }
         gameBoardDiv.appendChild(boardCell);
       }
     }
@@ -156,13 +164,19 @@ function DisplayController() {
   const endScreen = () => {
     // Change Result Div
     if (gameStatus === 3) {
-      resultDiv.textContent = "Draw!";
+      textDisplayDiv.textContent = "Game Result: Draw!";
+      textDisplayDiv.style.color = yellowColor;
     }
-    else {
-      resultDiv.textContent = `${game.getPlayerName(gameStatus)} Won!`;
+    // X won
+    else if ((gameStatus === 1)) {
+      textDisplayDiv.textContent = `Game Result: ${game.getPlayerNameByMarker("X")} Won!`;
+      textDisplayDiv.style.color = blueColor;
     }
-    // remove turn div content
-    turnDiv.textContent = "";
+    // O Won
+    else if ((gameStatus === 2)) {
+      textDisplayDiv.textContent = `Game Result: ${game.getPlayerNameByMarker("O")} Won!`;
+      textDisplayDiv.style.color = redColor;
+    }
   };
  
   const clickBoardHandler = (e) => {
