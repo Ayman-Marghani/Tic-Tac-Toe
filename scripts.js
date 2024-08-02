@@ -1,11 +1,3 @@
-/*
-TODO: objects: 
-* Game board (1) 
-* Game Controller (1) [Players array (2) - board] 
-* displayController (1)
-TODO: Single instance -> wrap the factory inside an IIFE
-*/
-
 // Constructors
 function Player(name, marker) {
   this.name = name;
@@ -36,7 +28,7 @@ function GameBoard() {
   // Create the initial board
   createNewBoard();
 
-  return {getBoard, putMarker};
+  return {getBoard, createNewBoard, putMarker};
 }
 
 function GameController(
@@ -119,7 +111,13 @@ function GameController(
     }
   };
 
-  return {playRound, checkStatus, getCurrentPlayer, getPlayerNameByMarker, getBoard: board.getBoard};
+  const restartGame = () => {
+    turn = 0;
+    currentPlayer = players[0];
+    board.createNewBoard();
+  };
+
+  return {playRound, checkStatus, getCurrentPlayer, getPlayerNameByMarker, restartGame, getBoard: board.getBoard };
 }
 
 function DisplayController() {
@@ -128,6 +126,8 @@ function DisplayController() {
 
   const gameBoardDiv = document.querySelector(".game-board");
   const textDisplayDiv = document.querySelector(".text-display");
+  const restartBtn = document.querySelector(".restart-btn");
+
   const blueColor = "#0284c7";
   const redColor = "#e63946";
   const yellowColor = "#fbbf24";
@@ -140,6 +140,7 @@ function DisplayController() {
     const board = game.getBoard();
     const currentPlayer = game.getCurrentPlayer();
     // Render current player's turn
+    textDisplayDiv.style.color = "#000";
     textDisplayDiv.textContent = `${currentPlayer.name}'s turn!`;
 
     // Render board cells
@@ -162,26 +163,39 @@ function DisplayController() {
   };
 
   const endScreen = () => {
-    // Change Result Div
-    if (gameStatus === 3) {
-      textDisplayDiv.textContent = "Game Result: Draw!";
-      textDisplayDiv.style.color = yellowColor;
-    }
-    // X won
-    else if ((gameStatus === 1)) {
+    // Show Restart Button
+    restartBtn.style.display = "inline-block";
+    // the first player (X) won
+    if ((gameStatus === 1)) {
       textDisplayDiv.textContent = `Game Result: ${game.getPlayerNameByMarker("X")} Won!`;
       textDisplayDiv.style.color = blueColor;
     }
-    // O Won
+    // the second player (O) Won
     else if ((gameStatus === 2)) {
       textDisplayDiv.textContent = `Game Result: ${game.getPlayerNameByMarker("O")} Won!`;
       textDisplayDiv.style.color = redColor;
     }
+    else {
+      textDisplayDiv.textContent = "Game Result: Draw!";
+      textDisplayDiv.style.color = yellowColor;
+    }
   };
+  
+  // Restart button click event handler
+  restartBtn.addEventListener("click", () => {
+    // Clear the board and update the screen
+    game.restartGame();
+    updateScreen();
+    // Hide restart button
+    restartBtn.style.display = "none";
+
+    gameBoardDiv.addEventListener("click", clickBoardHandler);
+  });
  
-  const clickBoardHandler = (e) => {
-    const row = e.target.getAttribute("row");
-    const col = e.target.getAttribute("col");
+  // Game board event handler
+  const clickBoardHandler = (event) => {
+    const row = event.target.getAttribute("row");
+    const col = event.target.getAttribute("col");
     // Make sure a cell is clicked not the gaps in between
     if (!row || !col) return;
     // put X or O on the clicked cell
