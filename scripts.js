@@ -5,17 +5,17 @@ function Player(name, marker) {
 }
 
 function GameBoard() {
-  let rows = 3;
-  let cols = 3;
+  const boardSize = 3;
   let board = [];
   
+  const getBoardSize = () => boardSize;
   const getBoard = () => board;
 
   const createNewBoard = () => {
     board = [];
-    for (let i = 0; i < rows; i++) {
+    for (let i = 0; i < boardSize; i++) {
       board[i] = [];
-      for (let j = 0; j < cols; j++) {
+      for (let j = 0; j < boardSize; j++) {
         board[i].push(".");
       }
     }
@@ -28,7 +28,7 @@ function GameBoard() {
   // Create the initial board
   createNewBoard();
 
-  return {getBoard, createNewBoard, putMarker};
+  return {getBoardSize, getBoard, createNewBoard, putMarker};
 }
 
 function GameController(
@@ -43,6 +43,7 @@ function GameController(
   let currentPlayer = players[0];
   let turn = 0;
   const board = GameBoard();
+  const boardSize = board.getBoardSize();
 
 
   const getCurrentPlayer = () => currentPlayer;
@@ -52,7 +53,6 @@ function GameController(
     currentPlayer = players[turn % 2];
   };
 
-  // we can get rid of this function
   const getPlayerNameByMarker = (marker) => {
     if (marker === "X") {
       return players[0].name;
@@ -76,7 +76,7 @@ function GameController(
       }
     }
     // Check Rows & Columns
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < boardSize; i++) {
       // Check Rows
       if (boardArr[i][0] === boardArr[i][1] && boardArr[i][1] === boardArr[i][2]) {
         if (boardArr[i][1] === "X") {
@@ -117,7 +117,7 @@ function GameController(
     board.createNewBoard();
   };
 
-  return {playRound, checkStatus, getCurrentPlayer, getPlayerNameByMarker, restartGame, getBoard: board.getBoard };
+  return {playRound, checkStatus, getCurrentPlayer, getPlayerNameByMarker, restartGame, getBoard: board.getBoard, getBoardSize: board.getBoardSize};
 }
 
 function DisplayController() {
@@ -143,9 +143,10 @@ function DisplayController() {
     textDisplayDiv.style.color = "#000";
     textDisplayDiv.textContent = `${currentPlayer.name}'s turn!`;
 
+    const boardSize = game.getBoardSize();
     // Render board cells
-    for (let i = 0; i < 3; i++) {
-      for (let j = 0; j < 3; j++) {
+    for (let i = 0; i < boardSize; i++) {
+      for (let j = 0; j < boardSize; j++) {
         const boardCell = document.createElement("button");
         boardCell.classList.add("board-cell");
         boardCell.setAttribute("row", i);
